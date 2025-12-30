@@ -1,6 +1,6 @@
-package com.company.delivery_api.repository.postgres;
+package com.company.delivery_api.application.customer.repository.postgres;
 
-import com.company.delivery_api.domain.postgres.Customer;
+import com.company.delivery_api.application.customer.domain.postgres.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,5 +14,4 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     
     boolean existsByEmail(String email);
 }
-
 

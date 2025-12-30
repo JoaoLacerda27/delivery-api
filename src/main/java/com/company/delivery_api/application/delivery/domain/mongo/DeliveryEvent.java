@@ -1,6 +1,6 @@
-package com.company.delivery_api.domain.mongo;
+package com.company.delivery_api.application.delivery.domain.mongo;
 
-import com.company.delivery_api.domain.mongo.enums.DeliveryEventTypeEnum;
+import com.company.delivery_api.application.delivery.domain.mongo.enums.DeliveryEventTypeEnum;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

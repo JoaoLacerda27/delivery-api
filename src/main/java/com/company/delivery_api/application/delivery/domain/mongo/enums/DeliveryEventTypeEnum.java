@@ -1,4 +1,4 @@
-package com.company.delivery_api.domain.mongo.enums;
+package com.company.delivery_api.application.delivery.domain.mongo.enums;
 
 public enum DeliveryEventTypeEnum {
     CREATED,
@@ -7,5 +7,4 @@ public enum DeliveryEventTypeEnum {
     DELIVERED,
     FAILED
 }
-
 

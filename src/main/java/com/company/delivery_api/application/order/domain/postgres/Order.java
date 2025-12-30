@@ -1,6 +1,7 @@
-package com.company.delivery_api.domain.postgres;
+package com.company.delivery_api.application.order.domain.postgres;
 
-import com.company.delivery_api.domain.postgres.enums.OrderStatusEnum;
+import com.company.delivery_api.application.customer.domain.postgres.Customer;
+import com.company.delivery_api.application.order.domain.postgres.enums.OrderStatusEnum;
 import com.company.delivery_api.shared.model.ModelBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;

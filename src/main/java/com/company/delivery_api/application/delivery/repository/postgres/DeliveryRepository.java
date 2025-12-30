@@ -1,6 +1,6 @@
-package com.company.delivery_api.repository.postgres;
+package com.company.delivery_api.application.delivery.repository.postgres;
 
-import com.company.delivery_api.domain.postgres.Delivery;
+import com.company.delivery_api.application.delivery.domain.postgres.Delivery;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,5 +12,4 @@ public interface DeliveryRepository extends JpaRepository<Delivery, UUID> {
     
     Optional<Delivery> findByOrderId(UUID orderId);
 }
-
 

@@ -1,4 +1,4 @@
-package com.company.delivery_api.domain.postgres.enums;
+package com.company.delivery_api.application.order.domain.postgres.enums;
 
 public enum OrderStatusEnum {
     CREATED,
@@ -7,5 +7,4 @@ public enum OrderStatusEnum {
     DELIVERED,
     CANCELED
 }
-
 

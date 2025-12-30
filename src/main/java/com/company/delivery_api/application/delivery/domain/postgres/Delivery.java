@@ -1,9 +1,10 @@
-package com.company.delivery_api.domain.postgres;
+package com.company.delivery_api.application.delivery.domain.postgres;
 
-import com.company.delivery_api.domain.postgres.enums.DeliveryStatusEnum;
+import com.company.delivery_api.application.delivery.domain.postgres.enums.DeliveryStatusEnum;
 import com.company.delivery_api.shared.model.ModelBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.UUID;
@@ -23,10 +24,9 @@ public class Delivery extends ModelBase {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false, unique = true, 
-                foreignKey = @ForeignKey(name = "FK_DELIVERY__ORDER_ID"))
-    private Order order;
+    @NotNull(message = "Order ID is mandatory")
+    @Column(name = "order_id", nullable = false, unique = true, updatable = false)
+    private UUID orderId;
 
     @NotBlank(message = "Street is mandatory")
     @Column(nullable = false, length = 255)
@@ -56,5 +56,4 @@ public class Delivery extends ModelBase {
         }
     }
 }
-
 
