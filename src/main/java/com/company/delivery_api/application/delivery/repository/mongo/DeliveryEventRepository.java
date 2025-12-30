@@ -10,6 +10,6 @@ import java.util.UUID;
 @Repository
 public interface DeliveryEventRepository extends MongoRepository<DeliveryEvent, String> {
     
-    List<DeliveryEvent> findByDeliveryIdOrderByCreatedAtAsc(UUID deliveryId);
+    List<DeliveryEvent> findByDeliveryIdOrderByOccurredAtAsc(UUID deliveryId);
 }
 

@@ -1,13 +1,13 @@
 package com.company.delivery_api.application.order.domain.postgres;
 
-import com.company.delivery_api.application.customer.domain.postgres.Customer;
-import com.company.delivery_api.application.order.domain.postgres.enums.OrderStatusEnum;
-import com.company.delivery_api.shared.model.ModelBase;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -17,38 +17,28 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(callSuper = false)
-public class Order extends ModelBase {
+public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @NotNull(message = "Customer is mandatory")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false, foreignKey = @ForeignKey(name = "FK_ORDER__CUSTOMER_ID"))
-    private Customer customer;
+    @NotBlank(message = "Customer name is mandatory")
+    @Column(name = "customer_name", nullable = false, length = 255)
+    private String customerName;
 
-    @NotNull(message = "Product ID is mandatory")
-    @Column(name = "product_id", nullable = false)
-    private Long productId; // ID do produto na Fake Store API
+    @NotNull(message = "Total amount is mandatory")
+    @Positive(message = "Total amount must be positive")
+    @Column(name = "total_amount", nullable = false, precision = 19, scale = 2)
+    private BigDecimal totalAmount;
 
-    @Min(value = 1, message = "Quantity must be at least 1")
-    @NotNull(message = "Quantity is mandatory")
-    @Column(nullable = false)
-    private Integer quantity;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    @Builder.Default
-    private OrderStatusEnum status = OrderStatusEnum.CREATED;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
     @PrePersist
-    protected void prePersist() {
-        if (this.status == null) {
-            this.status = OrderStatusEnum.CREATED;
-        }
+    void prePersist() {
+        this.createdAt = Instant.now();
     }
 }
 

@@ -18,9 +18,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/index.html").permitAll()
                         .requestMatchers("/api/**").permitAll() // TODO: Remover em produção - adicionar autenticação OAuth2
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll() // Permitir tudo para desenvolvimento (incluindo Swagger)
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> {}));

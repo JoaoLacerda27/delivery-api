@@ -29,6 +29,12 @@ public class DeliveryEvent {
     @Field("description")
     private String description;
 
+    @Field("source")
+    private String source;
+
+    @Field("occurred_at")
+    private Instant occurredAt;
+
     @Field("created_at")
     private Instant createdAt;
 
@@ -39,6 +45,8 @@ public class DeliveryEvent {
                 .deliveryId(deliveryId)
                 .type(type)
                 .description(description)
+                .source("SYSTEM")
+                .occurredAt(Instant.now())
                 .createdAt(Instant.now())
                 .build();
     }
