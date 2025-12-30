@@ -1,7 +1,9 @@
 package com.company.delivery_api.shared.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -12,18 +14,36 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Value("${app.security.enabled:false}")
+    private boolean securityEnabled;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/index.html").permitAll()
-                        .requestMatchers("/api/**").permitAll() // TODO: Remover em produção - adicionar autenticação OAuth2
-                        .anyRequest().permitAll() // Permitir tudo para desenvolvimento (incluindo Swagger)
-                )
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html",
+                            "/swagger-ui/index.html"
+                    ).permitAll();
+
+                    auth.requestMatchers("/actuator/**").permitAll();
+
+                    if (securityEnabled) {
+                        auth.requestMatchers("/api/**").authenticated();
+                        auth.anyRequest().authenticated();
+                    } else {
+                        auth.anyRequest().permitAll();
+                    }
+                })
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> {}));
+                        .jwt(Customizer.withDefaults())
+                        // To use custom JwtAuthConverter for roles/scopes extraction, replace above with:
+                        // .jwt(jwt -> jwt.jwtAuthenticationConverter(new JwtAuthConverter()))
+                );
 
         return http.build();
     }

@@ -1,16 +1,204 @@
-# Delivery API
+# 📦 Delivery API
 
-Order and Delivery Management API built with Spring Boot.
+## 📖 Project Overview
 
-## 🚀 Quick Start
+The **Delivery API** is a RESTful backend application built with **Java 21** and **Spring Boot**, designed to manage deliveries and orders while integrating with external services.
+
+The application demonstrates modern backend development practices, including:
+
+- Clean architecture with feature-based modularization
+- Integration with both **PostgreSQL** and **MongoDB**
+- External REST API consumption
+- Secure authentication using **OAuth2 with JWT**
+- API documentation using **Swagger / OpenAPI**
+- Containerized infrastructure using **Docker**
+
+This project was developed as part of a technical assessment to showcase backend engineering skills.
+
+---
+
+## 🛠 Tech Stack
+
+- **Java 21**
+- **Spring Boot**
+- **Spring Security (OAuth2 Resource Server)**
+- **PostgreSQL** (relational data / CRUD)
+- **MongoDB** (external service data & events)
+- **WebClient** (external API integration)
+- **Swagger / OpenAPI**
+- **Docker & Docker Compose**
+- **Maven**
+
+---
+
+## 🏗 Architecture
+
+### Feature-based Architecture
+
+The project follows a **feature-based modular architecture**:
+
+```
+application/
+  ├── delivery/        # Delivery feature module
+  ├── order/           # Order feature module
+  └── integrations/   # External API integrations
+      └── viacep/      # ViaCEP integration
+
+shared/
+  ├── config/          # Shared configurations
+  ├── security/        # Security configuration
+  ├── exception/       # Global exception handling
+  └── model/           # Shared domain models
+```
+
+**Key principles:**
+- Feature-based architecture
+- Shared concerns (security, config, exceptions) centralized under `shared`
+
+---
+
+## 🗄 Database Setup
+
+### PostgreSQL (CRUD Data)
+
+Used to store core business entities such as:
+- **Orders**
+- **Deliveries**
+
+**Local setup (Docker):**
+```bash
+docker-compose up -d postgres
+```
+
+### MongoDB (External & Tracking Data)
+
+Used to store:
+- Delivery tracking events
+- Data retrieved from external APIs
+
+**Local setup (Docker):**
+```bash
+docker-compose up -d mongodb
+```
+
+---
+
+## 🌐 External API Integration
+
+The application integrates with a public external REST API to enrich delivery data.
+
+**Example:**
+- **ViaCEP API** for address resolution based on ZIP code
+
+**Key points:**
+- Implemented using **WebClient**
+- External data is stored in **MongoDB**
+- Data is combined with PostgreSQL entities in API responses when requested
+
+---
+
+## 🔄 Business Logic
+
+- **CRUD operations** are handled via PostgreSQL
+- **External service data** is stored in MongoDB
+- A GET endpoint with a specific parameter triggers:
+  - External API call (if data is not cached)
+  - Combination of PostgreSQL + MongoDB data in the response
+
+**Example:**
+```
+GET /api/deliveries/{id}?includeTracking=true
+```
+
+---
+
+## 🔐 Security & Authentication
+
+The API is secured using **OAuth2 with JWT**.
+
+### Authentication Model
+
+- Authentication is handled by an external OAuth provider (e.g., Auth0 or Google)
+- The backend acts as a **Resource Server**
+- No user credentials or login logic are stored in the backend
+
+### Configuration (application.yml)
+
+```yaml
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH_ISSUER_URI}
+```
+
+### Environment Variables
+
+Create a `.env` file based on `.env.example` and provide the required values.
+
+**Development mode:**
+- Set `SECURITY_ENABLED=false` to disable authentication (for development)
+- Set `SECURITY_ENABLED=true` to enable OAuth2 JWT authentication (for production)
+
+---
+
+## 📘 API Documentation (Swagger)
+
+**Swagger UI** is available at:
+```
+http://localhost:8080/swagger-ui.html
+```
+
+**Features:**
+- JWT authentication support via **Authorize** button
+- Full documentation of endpoints, requests, and responses
+- Interactive API testing
+
+---
+
+## ▶️ Running the Application
 
 ### Prerequisites
 
-- Java 21
-- Maven
-- Docker and Docker Compose
+- **Java 21**
+- **Docker & Docker Compose**
+- **Maven**
 
-### 🐳 Option 1: Run Everything with Docker Compose (Recommended)
+### Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd delivery-api
+   ```
+
+2. **Create a `.env` file** based on `.env.example`
+   ```bash
+   cp env.example .env
+   ```
+
+3. **Start the databases:**
+   ```bash
+   docker-compose up -d postgres mongodb
+   ```
+
+4. **Build the application:**
+   ```bash
+   ./mvnw clean package
+   ```
+
+5. **Run the application:**
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+   
+   Or using the JAR:
+   ```bash
+   java -jar target/delivery-api-0.0.1-SNAPSHOT.jar
+   ```
+
+### 🐳 Option: Run Everything with Docker Compose
 
 This will start PostgreSQL, MongoDB, and the application all together:
 
@@ -30,152 +218,182 @@ This will start:
 - MongoDB on port `27017`
 - Application on port `8080`
 
-### 💻 Option 2: Run Locally (Development)
+---
 
-#### 1️⃣ Start Infrastructure (PostgreSQL + MongoDB)
+## 🧪 Testing
 
+- Endpoints can be tested via **Swagger UI**
+- Authentication requires a valid JWT from the configured OAuth provider
+- Standard HTTP status codes and validation errors are returned
+
+### Example API Calls
+
+**Create an Order:**
 ```bash
-docker-compose up -d postgres mongodb
+POST /api/orders
+Content-Type: application/json
+
+{
+  "customerName": "John Doe",
+  "totalAmount": 99.99
+}
 ```
 
-#### 2️⃣ Configure Environment Variables
-
-Copy `env.example` to `.env` and adjust if needed:
-
+**Create a Delivery:**
 ```bash
-# On Windows (PowerShell)
-Copy-Item env.example .env
+POST /api/deliveries/{orderId}
+Content-Type: application/json
 
-# On Linux/Mac
-cp env.example .env
+{
+  "street": "Main Street",
+  "city": "São Paulo",
+  "state": "SP",
+  "zipCode": "01001000"
+}
 ```
 
-The default values should work if you're using the docker-compose setup.
-
-#### 3️⃣ Run the Application
-
+**Get Delivery with Tracking:**
 ```bash
-# Using Maven Wrapper
-./mvnw spring-boot:run
-
-# Or using the VS Code task
-# Press Ctrl+Shift+P -> "Delivery API" > "Backend"
+GET /api/deliveries/{deliveryId}?includeTracking=true
 ```
 
-### 4️⃣ Access the API
-
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
-- **API Docs (JSON)**: http://localhost:8080/v3/api-docs
+---
 
 ## 📁 Project Structure
 
 ```
-com.company.deliveryapi
+com.company.delivery_api
  ├── application
- ├── domain
- │    ├── postgres
- │    └── mongo
- ├── repository
- │    ├── postgres
- │    └── mongo
- ├── integration
+ │    ├── delivery
+ │    │    ├── controller
+ │    │    │    ├── doc
+ │    │    │    │    └── DeliveryDoc.java
+ │    │    │    └── DeliveryController.java
+ │    │    ├── domain
+ │    │    │    ├── mongo
+ │    │    │    │    ├── AddressInfo.java
+ │    │    │    │    └── DeliveryEvent.java
+ │    │    │    └── postgres
+ │    │    │        ├── Delivery.java
+ │    │    │        └── enums
+ │    │    │            └── DeliveryStatusEnum.java
+ │    │    ├── dto
+ │    │    │    ├── CreateDeliveryRequest.java
+ │    │    │    ├── DeliveryResponse.java
+ │    │    │    ├── DeliveryWithTrackingResponse.java
+ │    │    │    ├── TrackingEventResponse.java
+ │    │    │    └── UpdateDeliveryStatusRequest.java
+ │    │    ├── repository
+ │    │    │    ├── mongo
+ │    │    │    │    ├── AddressInfoRepository.java
+ │    │    │    │    └── DeliveryEventRepository.java
+ │    │    │    └── postgres
+ │    │    │        └── DeliveryRepository.java
+ │    │    └── service
+ │    │        ├── DeliveryQueryService.java
+ │    │        └── DeliveryService.java
+ │    ├── integrations
+ │    │    └── viacep
+ │    │        ├── client
+ │    │        │    └── ViaCepClient.java
+ │    │        └── dto
+ │    │            └── ViaCepResponse.java
+ │    └── order
+ │        ├── controller
+ │        │    ├── doc
+ │        │    │    └── OrderDoc.java
+ │        │    └── OrderController.java
+ │        ├── domain
+ │        │    └── postgres
+ │        │        └── Order.java
+ │        ├── dto
+ │        │    ├── CreateOrderRequest.java
+ │        │    └── OrderResponse.java
+ │        ├── repository
+ │        │    └── postgres
+ │        │        └── OrderRepository.java
+ │        └── service
+ │            └── OrderService.java
  └── shared
-      ├── security
       ├── config
-      └── exception
+      │    ├── SwaggerConfig.java
+      │    └── WebClientConfig.java
+      ├── exception
+      │    ├── response
+      │    │    └── ErrorResponse.java
+      │    ├── types
+      │    │    ├── DeliveryAlreadyExistsException.java
+      │    │    ├── DeliveryNotFoundException.java
+      │    │    ├── InvalidDeliveryStatusTransitionException.java
+      │    │    └── OrderNotFoundException.java
+      │    └── GlobalExceptionHandler.java
+      ├── model
+      │    └── ModelBase.java
+      └── security
+           ├── JwtAuthConverter.java
+           └── SecurityConfig.java
 ```
 
-## 🛠️ Technology Stack
+---
 
-- **Spring Boot 3.5.9**
-- **PostgreSQL** - Business data (CRUD)
-- **MongoDB** - Cache/snapshot of external APIs
-- **Spring Security** - OAuth2 + JWT
-- **Springdoc OpenAPI** - Swagger documentation
+## ⚠️ Known Issues / Limitations
 
-## 🔧 Configuration
+- External API availability depends on third-party service uptime
+- Token generation is delegated to the OAuth provider and not handled internally
 
-### Database Connections
+---
 
-The application uses environment variables for database configuration:
+## 🐳 Docker Support
 
-- `POSTGRES_URL` - PostgreSQL connection URL
-- `POSTGRES_USER` - PostgreSQL username
-- `POSTGRES_PASSWORD` - PostgreSQL password
-- `MONGO_URI` - MongoDB connection URI
-- `OAUTH_ISSUER_URI` - OAuth2 JWT issuer URI
+The application can be containerized using the provided `Dockerfile`.
+
+### Build image
+```bash
+docker build -t delivery-api .
+```
+
+### Run container
+```bash
+docker run -p 8080:8080 delivery-api
+```
 
 ### Docker Compose
 
-To stop the containers:
+The `docker-compose.yml` file includes:
+- PostgreSQL service
+- MongoDB service
+- Application service (with build configuration)
+
+---
+
+## 📝 Environment Variables
+
+See `.env.example` for all required environment variables:
 
 ```bash
-docker-compose down
+# PostgreSQL Configuration
+POSTGRES_URL=jdbc:postgresql://localhost:5432/delivery
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+
+# MongoDB Configuration
+MONGO_URI=mongodb://localhost:27017/delivery
+
+# OAuth2 Configuration
+OAUTH_ISSUER_URI=https://your-tenant.us.auth0.com/
+
+# Security Configuration
+SECURITY_ENABLED=false
 ```
 
-To stop and remove volumes (⚠️ deletes data):
+---
 
-```bash
-docker-compose down -v
-```
+## 📄 License
 
-## 📝 API Documentation
+This project is licensed under the Apache 2.0 License.
 
-Once the application is running, access the Swagger UI at:
-http://localhost:8080/swagger-ui.html
+---
 
-## 🔐 Security
+## 👥 Author
 
-The API is secured with OAuth2 + JWT. Swagger endpoints are publicly accessible for development.
-
-## 🧪 Testing
-
-```bash
-./mvnw test
-```
-
-## 📦 Building
-
-```bash
-./mvnw clean package
-```
-
-## 🐳 Docker
-
-### Build the Docker Image
-
-```bash
-docker build -t delivery-api:latest .
-```
-
-### Run the Docker Container
-
-Make sure PostgreSQL and MongoDB are running (via docker-compose):
-
-```bash
-# Start infrastructure
-docker-compose up -d
-
-# Run the application container
-docker run -d \
-  --name delivery-api \
-  -p 8080:8080 \
-  --env-file .env \
-  --network host \
-  delivery-api:latest
-```
-
-Or use docker-compose to run everything together (you can add the app service to docker-compose.yml):
-
-```bash
-# Build and run
-docker-compose up -d --build
-```
-
-### Stop the Container
-
-```bash
-docker stop delivery-api
-docker rm delivery-api
-```
-
+Developed as part of a technical assessment to demonstrate backend engineering skills.

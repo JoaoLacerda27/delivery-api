@@ -29,7 +29,9 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OAUTH_ISSUER_URI:https://your-domain.auth0.com/}
+          issuer-uri: ${OAUTH_ISSUER_URI:https://your-tenant.us.auth0.com/}
+          # JWT validation configuration
+          # Spring Boot will automatically fetch the JWK Set from {issuer-uri}/.well-known/jwks.json
 
 server:
   port: 8080
@@ -40,3 +42,15 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+
+integrations:
+  via-cep:
+    url: https://viacep.com.br/ws
+
+# Application Security Configuration
+app:
+  security:
+    # Set to true to enable OAuth2 JWT authentication for API endpoints
+    # false = development mode (no authentication required)
+    # true = production mode (OAuth2 JWT required)
+    enabled: ${SECURITY_ENABLED:false}

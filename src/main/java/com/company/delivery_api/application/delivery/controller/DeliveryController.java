@@ -56,6 +56,8 @@ public class DeliveryController implements DeliveryDoc {
         }
 
         var events = deliveryQueryService.findEvents(deliveryId);
+        var addressInfo = deliveryQueryService.getOrFetchAddress(deliveryId, delivery.getZipCode());
+        
         return ResponseEntity.ok(new DeliveryWithTrackingResponse(
                 delivery.getId(),
                 delivery.getOrderId(),
@@ -65,7 +67,8 @@ public class DeliveryController implements DeliveryDoc {
                 delivery.getZipCode(),
                 delivery.getStatus().name(),
                 delivery.getCreatedAt(),
-                events
+                events,
+                addressInfo
         ));
     }
 
