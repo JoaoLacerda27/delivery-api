@@ -4,3 +4,5 @@ echo DROP TABLE IF EXISTS flyway_schema_history CASCADE; | docker exec -i delive
 echo Histórico do Flyway limpo! Agora rode a aplicacao novamente.
 
 
+
+

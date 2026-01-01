@@ -6,3 +6,5 @@ echo "DROP TABLE IF EXISTS flyway_schema_history CASCADE;" | docker exec -i deli
 echo "Histórico do Flyway limpo! Agora rode a aplicação novamente."
 
 
+
+

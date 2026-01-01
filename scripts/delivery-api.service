@@ -1,0 +1,18 @@
+[Unit]
+Description=Delivery API Service
+After=network.target postgresql.service mongod.service
+
+[Service]
+Type=simple
+User=seu-usuario
+WorkingDirectory=/opt/delivery-api
+EnvironmentFile=/opt/delivery-api/.env
+ExecStart=/usr/bin/java -jar /opt/delivery-api/app.jar
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

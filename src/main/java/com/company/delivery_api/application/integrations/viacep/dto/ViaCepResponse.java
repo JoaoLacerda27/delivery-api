@@ -1,6 +1,7 @@
 package com.company.delivery_api.application.integrations.viacep.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ViaCepResponse(
@@ -9,6 +10,9 @@ public record ViaCepResponse(
         String complemento,
         String bairro,
         String localidade,
-        String uf
+        String uf,
+        @JsonProperty("erro")
+        Boolean erro
 ) {}
+
 

@@ -12,18 +12,6 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Custom JWT Authentication Converter
- * 
- * Extracts authorities from JWT claims (roles, scopes, etc.)
- * 
- * Example JWT claims:
- * {
- *   "scope": "read write",
- *   "roles": ["USER", "ADMIN"],
- *   "authorities": ["SCOPE_read", "SCOPE_write"]
- * }
- */
 public class JwtAuthConverter implements Converter<Jwt, JwtAuthenticationToken> {
 
     private final JwtGrantedAuthoritiesConverter defaultConverter = new JwtGrantedAuthoritiesConverter();
@@ -38,13 +26,6 @@ public class JwtAuthConverter implements Converter<Jwt, JwtAuthenticationToken> 
         return new JwtAuthenticationToken(jwt, authorities);
     }
 
-    /**
-     * Extract custom authorities from JWT claims
-     * Supports:
-     * - "scope" claim (space-separated): "read write" -> SCOPE_read, SCOPE_write
-     * - "roles" claim (array): ["USER", "ADMIN"] -> ROLE_USER, ROLE_ADMIN
-     * - "authorities" claim (array): ["SCOPE_read"] -> SCOPE_read
-     */
     private Collection<GrantedAuthority> extractCustomAuthorities(Jwt jwt) {
         return Stream.of(
                 extractScopes(jwt),

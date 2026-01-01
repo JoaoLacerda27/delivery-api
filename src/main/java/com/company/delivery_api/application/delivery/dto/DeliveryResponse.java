@@ -1,5 +1,6 @@
 package com.company.delivery_api.application.delivery.dto;
 
+import com.company.delivery_api.application.delivery.domain.mongo.AddressInfo;
 import com.company.delivery_api.application.delivery.domain.postgres.enums.DeliveryStatusEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -30,6 +31,12 @@ public record DeliveryResponse(
         DeliveryStatusEnum status,
         
         @Schema(description = "Delivery creation timestamp", example = "2024-01-15T10:30:00Z")
-        Instant createdAt
+        Instant createdAt,
+        
+        @Schema(description = "Name of the deliverer (assigned when status changes to IN_TRANSIT)", example = "João Silva")
+        String delivererName,
+        
+        @Schema(description = "Address information from ViaCEP (if available)")
+        AddressInfo addressInfo
 ) {}
 

@@ -42,22 +42,53 @@ public class DeliveryQueryService {
     }
 
     public AddressInfo getOrFetchAddress(UUID deliveryId, String cep) {
-        return addressInfoRepository.findByDeliveryId(deliveryId)
-                .orElseGet(() -> {
-                    ViaCepResponse response = viaCepClient.getAddress(cep);
+        String normalizedCep = cep != null ? cep.replaceAll("[^0-9]", "") : null;
+        
+        if (normalizedCep == null || normalizedCep.isEmpty()) {
+            return null;
+        }
+        
+        AddressInfo cached = addressInfoRepository.findByDeliveryId(deliveryId)
+                .orElse(null);
+        
+        if (cached != null) {
+            return cached;
+        }
+        
+        cached = addressInfoRepository.findByCep(normalizedCep)
+                .orElse(null);
+        
+        if (cached != null) {
+            if (cached.getDeliveryId() == null) {
+                cached.setDeliveryId(deliveryId);
+                return addressInfoRepository.save(cached);
+            }
+            return cached;
+        }
+        
+        try {
+            ViaCepResponse response = viaCepClient.getAddress(normalizedCep);
+            
+            if (Boolean.TRUE.equals(response.erro()) || 
+                response.cep() == null || 
+                response.cep().isEmpty()) {
+                return null;
+            }
 
-                    AddressInfo info = AddressInfo.builder()
-                            .deliveryId(deliveryId)
-                            .cep(response.cep())
-                            .street(response.logradouro())
-                            .neighborhood(response.bairro())
-                            .city(response.localidade())
-                            .state(response.uf())
-                            .fetchedAt(Instant.now())
-                            .build();
+            AddressInfo info = AddressInfo.builder()
+                    .deliveryId(deliveryId)
+                    .cep(normalizedCep)
+                    .street(response.logradouro() != null ? response.logradouro() : "")
+                    .neighborhood(response.bairro() != null ? response.bairro() : "")
+                    .city(response.localidade() != null ? response.localidade() : "")
+                    .state(response.uf() != null ? response.uf() : "")
+                    .fetchedAt(Instant.now())
+                    .build();
 
-                    return addressInfoRepository.save(info);
-                });
+            return addressInfoRepository.save(info);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
 

@@ -33,7 +33,7 @@ public interface DeliveryDoc {
 
     @Operation(
             summary = "Update delivery status",
-            description = "Updates the status of an existing delivery"
+            description = "Updates the status of an existing delivery. When status changes to IN_TRANSIT, the logged-in user is automatically assigned as the deliverer."
     )
     ResponseEntity<DeliveryResponse> updateStatus(
             @Parameter(description = "Delivery ID") UUID deliveryId,

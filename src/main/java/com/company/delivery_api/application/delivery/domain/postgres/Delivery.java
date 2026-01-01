@@ -49,6 +49,9 @@ public class Delivery extends ModelBase {
     @Builder.Default
     private DeliveryStatusEnum status = DeliveryStatusEnum.PENDING;
 
+    @Column(name = "deliverer_name", length = 255)
+    private String delivererName;
+
     @PrePersist
     protected void prePersist() {
         if (this.status == null) {

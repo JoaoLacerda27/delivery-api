@@ -11,5 +11,8 @@ import java.util.UUID;
 public interface AddressInfoRepository extends MongoRepository<AddressInfo, String> {
 
     Optional<AddressInfo> findByDeliveryId(UUID deliveryId);
+    
+    Optional<AddressInfo> findByCep(String cep);
 }
+
 

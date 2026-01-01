@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -17,11 +18,20 @@ public class SecurityConfig {
     @Value("${app.security.enabled:false}")
     private boolean securityEnabled;
 
+    private final CorsConfigurationSource corsConfigurationSource;
+
+    public SecurityConfig(CorsConfigurationSource corsConfigurationSource) {
+        this.corsConfigurationSource = corsConfigurationSource;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                )
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
                             "/v3/api-docs/**",
@@ -31,6 +41,7 @@ public class SecurityConfig {
                     ).permitAll();
 
                     auth.requestMatchers("/actuator/**").permitAll();
+                    auth.requestMatchers("/oauth2/**", "/login/oauth2/**", "/api/auth/**").permitAll();
 
                     if (securityEnabled) {
                         auth.requestMatchers("/api/**").authenticated();
@@ -39,11 +50,16 @@ public class SecurityConfig {
                         auth.anyRequest().permitAll();
                     }
                 })
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults())
-                        // To use custom JwtAuthConverter for roles/scopes extraction, replace above with:
-                        // .jwt(jwt -> jwt.jwtAuthenticationConverter(new JwtAuthConverter()))
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("/api/auth/login-success", true)
+                        .failureUrl("/api/auth/login-failure")
                 );
+                
+        if (securityEnabled) {
+            http.oauth2ResourceServer(oauth2 -> oauth2
+                    .jwt(Customizer.withDefaults())
+            );
+        }
 
         return http.build();
     }
