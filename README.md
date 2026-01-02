@@ -1,204 +1,232 @@
-# 📦 Delivery API
+# Delivery API
 
-## 📖 Project Overview
+## Project Overview
 
-The **Delivery API** is a RESTful backend application built with **Java 21** and **Spring Boot**, designed to manage deliveries and orders while integrating with external services.
+The **Delivery API** is a RESTful backend application built with **Java 21** and **Spring Boot 3.3.5**, designed to manage deliveries and orders while integrating with external services.
 
-The application demonstrates modern backend development practices, including:
+This application demonstrates modern backend development practices, including:
 
-- Clean architecture with feature-based modularization
-- Integration with both **PostgreSQL** and **MongoDB**
-- External REST API consumption
-- Secure authentication using **OAuth2 with JWT**
-- API documentation using **Swagger / OpenAPI**
-- Containerized infrastructure using **Docker**
+- Integration with external REST API (ViaCEP)
+- CRUD operations stored in PostgreSQL
+- External service data stored in MongoDB
+- OAuth2 authentication with Google
+- API documentation using Swagger/OpenAPI
+- Docker containerization support
 
-This project was developed as part of a technical assessment to showcase backend engineering skills.
-
----
-
-## 🛠 Tech Stack
-
-- **Java 21**
-- **Spring Boot**
-- **Spring Security (OAuth2 Resource Server)**
-- **PostgreSQL** (relational data / CRUD)
-- **MongoDB** (external service data & events)
-- **WebClient** (external API integration)
-- **Swagger / OpenAPI**
-- **Docker & Docker Compose**
-- **Maven**
+This project was developed as part of the ZCAM technical assessment for Java Backend Developer position.
 
 ---
 
-## 🏗 Architecture
+## Prerequisites
 
-### Feature-based Architecture
+Before running this application, ensure you have the following installed:
 
-The project follows a **feature-based modular architecture**:
+- **Java 21** or higher
+- **Maven 3.6+**
+- **Docker** and **Docker Compose** (for local database setup)
+- **PostgreSQL** (local or cloud service like Cloud SQL)
+- **MongoDB** (local or cloud service like MongoDB Atlas)
+- **Google OAuth2 credentials** (Client ID and Client Secret)
+
+---
+
+## Project Structure
+
+The project follows a standard Spring Boot structure with clear separation of concerns:
 
 ```
-application/
-  ├── delivery/        # Delivery feature module
-  ├── order/           # Order feature module
-  └── integrations/   # External API integrations
-      └── viacep/      # ViaCEP integration
-
-shared/
-  ├── config/          # Shared configurations
-  ├── security/        # Security configuration
-  ├── exception/       # Global exception handling
-  └── model/           # Shared domain models
+src/main/java/com/company/delivery_api/
+├── application/
+│   ├── delivery/          # Delivery feature module
+│   │   ├── controller/    # REST controllers
+│   │   ├── domain/        # Domain models (PostgreSQL and MongoDB)
+│   │   ├── dto/           # Data Transfer Objects
+│   │   ├── repository/    # Data access layer
+│   │   └── service/       # Business logic
+│   ├── order/             # Order feature module
+│   │   ├── controller/
+│   │   ├── domain/
+│   │   ├── dto/
+│   │   ├── repository/
+│   │   └── service/
+│   ├── integrations/      # External API integrations
+│   │   └── viacep/        # ViaCEP API integration
+│   └── auth/              # Authentication module
+│       ├── controller/
+│       ├── dto/
+│       └── service/
+└── shared/
+    ├── config/            # Shared configurations
+    ├── security/          # Security configuration
+    ├── exception/         # Global exception handling
+    └── model/             # Shared domain models
 ```
 
 **Key principles:**
-- Feature-based architecture
-- Shared concerns (security, config, exceptions) centralized under `shared`
+- Feature-based modular architecture
+- Separation of concerns (controllers, services, repositories)
+- Shared concerns centralized under `shared` package
 
 ---
 
-## 🗄 Database Setup
+## Configuration Files
 
-### PostgreSQL (CRUD Data)
+### application.yml
 
-Used to store core business entities such as:
-- **Orders**
-- **Deliveries**
+The main configuration file is located at `src/main/resources/application.yaml` and contains:
 
-**Local setup (Docker):**
-```bash
-docker-compose up -d postgres
-```
+- Database configurations (PostgreSQL and MongoDB)
+- OAuth2 client configuration
+- Server port configuration
+- Swagger/OpenAPI configuration
+- External API endpoints
 
-### MongoDB (External & Tracking Data)
+### Environment Variables
 
-Used to store:
-- Delivery tracking events
-- Data retrieved from external APIs
+Sensitive information is configured via environment variables. See `.env.example` for all required variables.
 
-**Local setup (Docker):**
+---
+
+## Database Setup
+
+### NoSQL Database (MongoDB)
+
+MongoDB is used to store all data related to external services (e.g., address information from ViaCEP API, delivery tracking events).
+
+#### Local Setup (Docker)
+
 ```bash
 docker-compose up -d mongodb
 ```
 
----
+#### Cloud Setup (MongoDB Atlas)
 
-## 🌐 External API Integration
+1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a cluster (M0 free tier is sufficient)
+3. Configure Network Access: Add `0.0.0.0/0` or your specific IP
+4. Create a database user
+5. Get the connection string: `mongodb+srv://user:password@cluster.mongodb.net/delivery`
 
-The application integrates with a public external REST API to enrich delivery data.
+### SQL Database (PostgreSQL)
 
-**Example:**
-- **ViaCEP API** for address resolution based on ZIP code
+PostgreSQL is used to store all data related to CRUD operations (orders, deliveries, customers).
 
-**Key points:**
-- Implemented using **WebClient**
-- External data is stored in **MongoDB**
-- Data is combined with PostgreSQL entities in API responses when requested
+#### Local Setup (Docker)
 
----
-
-## 🔄 Business Logic
-
-- **CRUD operations** are handled via PostgreSQL
-- **External service data** is stored in MongoDB
-- A GET endpoint with a specific parameter triggers:
-  - External API call (if data is not cached)
-  - Combination of PostgreSQL + MongoDB data in the response
-
-**Example:**
-```
-GET /api/deliveries/{id}?includeTracking=true
+```bash
+docker-compose up -d postgres
 ```
 
----
+#### Cloud Setup (Cloud SQL)
 
-## 🔐 Security & Authentication
+1. Create a PostgreSQL instance in Google Cloud SQL
+2. Create database: `delivery`
+3. Create user with appropriate permissions
+4. Get connection string: `jdbc:postgresql://IP:5432/delivery`
 
-The API is secured using **OAuth2 with JWT**.
+### Database Models
 
-### Authentication Model
+- **PostgreSQL Models**: Located in `application/*/domain/postgres/`
+  - `Order.java` - Order entity
+  - `Delivery.java` - Delivery entity
+  - `Customer.java` - Customer entity
 
-- Authentication is handled by an external OAuth provider (e.g., Auth0 or Google)
-- The backend acts as a **Resource Server**
-- No user credentials or login logic are stored in the backend
+- **MongoDB Models**: Located in `application/*/domain/mongo/`
+  - `AddressInfo.java` - Address information from external API
+  - `DeliveryEvent.java` - Delivery tracking events
 
-### Configuration (application.yml)
+### Data Validation
 
-```yaml
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${OAUTH_ISSUER_URI}
-```
-
-### Environment Variables
-
-Create a `.env` file based on `.env.example` and provide the required values.
-
-**Development mode:**
-- Set `SECURITY_ENABLED=false` to disable authentication (for development)
-- Set `SECURITY_ENABLED=true` to enable OAuth2 JWT authentication (for production)
+All mandatory attributes are validated using Spring's validation framework (`@NotNull`, `@NotBlank`, `@Valid`, etc.). Meaningful error messages are returned when validation fails.
 
 ---
 
-## 📘 API Documentation (Swagger)
+## Setup Instructions
 
-**Swagger UI** is available at:
-```
-http://localhost:8080/swagger-ui.html
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd delivery-api
 ```
 
-**Features:**
-- JWT authentication support via **Authorize** button
-- Full documentation of endpoints, requests, and responses
-- Interactive API testing
+### 2. Configure Environment Variables
+
+Create a `.env` file based on `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and provide the required values:
+
+```bash
+# PostgreSQL Configuration
+POSTGRES_URL=jdbc:postgresql://localhost:5432/delivery
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+
+# MongoDB Configuration
+MONGO_URI=mongodb://localhost:27017/delivery
+# OR for MongoDB Atlas:
+# MONGO_URI=mongodb+srv://user:password@cluster.mongodb.net/delivery
+
+# OAuth2 Configuration
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=http://localhost:8080/login/oauth2/code/google
+OAUTH_ISSUER_URI=https://your-tenant.us.auth0.com/
+
+# Security Configuration
+SECURITY_ENABLED=false  # Set to true for production
+
+# Server Configuration
+PORT=8080
+
+# Frontend Configuration
+FRONTEND_URL=http://localhost:5173
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+```
+
+### 3. Start Databases
+
+Using Docker Compose:
+
+```bash
+docker-compose up -d postgres mongodb
+```
+
+Or start them manually if you have PostgreSQL and MongoDB installed locally.
+
+### 4. Build the Application
+
+```bash
+./mvnw clean package
+```
+
+Or using Maven directly:
+
+```bash
+mvn clean package
+```
 
 ---
 
-## ▶️ Running the Application
+## Running the Application
 
-### Prerequisites
+### Option 1: Using Maven
 
-- **Java 21**
-- **Docker & Docker Compose**
-- **Maven**
+```bash
+./mvnw spring-boot:run
+```
 
-### Steps
+### Option 2: Using JAR
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd delivery-api
-   ```
+```bash
+java -jar target/delivery-api-0.0.1-SNAPSHOT.jar
+```
 
-2. **Create a `.env` file** based on `.env.example`
-   ```bash
-   cp env.example .env
-   ```
-
-3. **Start the databases:**
-   ```bash
-   docker-compose up -d postgres mongodb
-   ```
-
-4. **Build the application:**
-   ```bash
-   ./mvnw clean package
-   ```
-
-5. **Run the application:**
-   ```bash
-   ./mvnw spring-boot:run
-   ```
-   
-   Or using the JAR:
-   ```bash
-   java -jar target/delivery-api-0.0.1-SNAPSHOT.jar
-   ```
-
-### 🐳 Option: Run Everything with Docker Compose
+### Option 3: Using Docker Compose
 
 This will start PostgreSQL, MongoDB, and the application all together:
 
@@ -213,187 +241,272 @@ docker-compose logs -f app
 docker-compose down
 ```
 
-This will start:
-- PostgreSQL on port `5432`
-- MongoDB on port `27017`
-- Application on port `8080`
+The application will be available at:
+- **API Base URL**: `http://localhost:8080`
+- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
 
 ---
 
-## 🧪 Testing
+## API Documentation
 
-- Endpoints can be tested via **Swagger UI**
-- Authentication requires a valid JWT from the configured OAuth provider
-- Standard HTTP status codes and validation errors are returned
+### Swagger UI
 
-### Example API Calls
+The API documentation is available via Swagger UI at:
 
-**Create an Order:**
+**http://localhost:8080/swagger-ui.html**
+
+Swagger UI provides:
+- Interactive API testing
+- Complete endpoint documentation
+- Request/response schemas
+- OAuth2 authentication support via "Authorize" button
+
+### API Endpoints
+
+#### Orders
+
+- `GET /api/orders` - List all orders (paginated)
+- `GET /api/orders/{id}` - Get order by ID
+- `POST /api/orders` - Create a new order
+- `PATCH /api/orders/{id}` - Update an order
+- `DELETE /api/orders/{id}` - Delete an order
+
+#### Deliveries
+
+- `GET /api/deliveries` - List all deliveries (paginated)
+- `GET /api/deliveries/{id}` - Get delivery by ID
+- `GET /api/deliveries/{id}?includeTracking=true` - Get delivery with tracking (triggers external API call)
+- `POST /api/deliveries/{orderId}` - Create a new delivery
+- `PATCH /api/deliveries/{id}/status` - Update delivery status
+
+#### Authentication
+
+- `GET /api/auth/login` - Get login URL
+- `GET /api/auth/login-success` - OAuth2 success callback
+- `GET /api/auth/login-failure` - OAuth2 failure callback
+- `GET /api/auth/user` - Get current authenticated user
+- `POST /api/auth/logout` - Logout
+
+---
+
+## Testing Instructions
+
+### Using Swagger UI
+
+1. Access Swagger UI at `http://localhost:8080/swagger-ui.html`
+2. If security is enabled, click "Authorize" and authenticate with Google OAuth
+3. Test endpoints directly from the Swagger interface
+
+### Using cURL Examples
+
+#### Create an Order
+
 ```bash
-POST /api/orders
-Content-Type: application/json
-
-{
-  "customerName": "John Doe",
-  "totalAmount": 99.99
-}
+curl -X POST http://localhost:8080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerName": "John Doe",
+    "items": [
+      {
+        "productName": "Product 1",
+        "quantity": 2,
+        "price": 99.99
+      }
+    ]
+  }'
 ```
 
-**Create a Delivery:**
+#### Create a Delivery
+
 ```bash
-POST /api/deliveries/{orderId}
-Content-Type: application/json
-
-{
-  "street": "Main Street",
-  "city": "São Paulo",
-  "state": "SP",
-  "zipCode": "01001000"
-}
+curl -X POST http://localhost:8080/api/deliveries/{orderId} \
+  -H "Content-Type: application/json" \
+  -d '{
+    "street": "Main Street",
+    "city": "São Paulo",
+    "state": "SP",
+    "zipCode": "01001000"
+  }'
 ```
 
-**Get Delivery with Tracking:**
+#### Get Delivery with Tracking (triggers external API)
+
 ```bash
-GET /api/deliveries/{deliveryId}?includeTracking=true
+curl -X GET "http://localhost:8080/api/deliveries/{deliveryId}?includeTracking=true"
+```
+
+This endpoint:
+1. Retrieves delivery data from PostgreSQL
+2. Calls ViaCEP API to get address information (if not cached)
+3. Stores address data in MongoDB
+4. Retrieves tracking events from MongoDB
+5. Combines all data in the response
+
+### Authentication Testing
+
+If `SECURITY_ENABLED=true`:
+
+1. Access `/oauth2/authorization/google` to initiate OAuth flow
+2. Authenticate with Google
+3. Use the returned JWT token in subsequent requests:
+
+```bash
+curl -X GET http://localhost:8080/api/orders \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ---
 
-## 📁 Project Structure
+## Security and Authentication
 
+### OAuth2 Authentication
+
+The application uses Spring Security with OAuth2 for authentication. Currently configured to work with:
+
+- **Google OAuth2** (primary)
+- **Auth0** (optional, via JWT resource server)
+
+### Configuration
+
+OAuth2 is configured in `application.yaml`:
+
+```yaml
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI}
+            scope:
+              - profile
+              - email
 ```
-com.company.delivery_api
- ├── application
- │    ├── delivery
- │    │    ├── controller
- │    │    │    ├── doc
- │    │    │    │    └── DeliveryDoc.java
- │    │    │    └── DeliveryController.java
- │    │    ├── domain
- │    │    │    ├── mongo
- │    │    │    │    ├── AddressInfo.java
- │    │    │    │    └── DeliveryEvent.java
- │    │    │    └── postgres
- │    │    │        ├── Delivery.java
- │    │    │        └── enums
- │    │    │            └── DeliveryStatusEnum.java
- │    │    ├── dto
- │    │    │    ├── CreateDeliveryRequest.java
- │    │    │    ├── DeliveryResponse.java
- │    │    │    ├── DeliveryWithTrackingResponse.java
- │    │    │    ├── TrackingEventResponse.java
- │    │    │    └── UpdateDeliveryStatusRequest.java
- │    │    ├── repository
- │    │    │    ├── mongo
- │    │    │    │    ├── AddressInfoRepository.java
- │    │    │    │    └── DeliveryEventRepository.java
- │    │    │    └── postgres
- │    │    │        └── DeliveryRepository.java
- │    │    └── service
- │    │        ├── DeliveryQueryService.java
- │    │        └── DeliveryService.java
- │    ├── integrations
- │    │    └── viacep
- │    │        ├── client
- │    │        │    └── ViaCepClient.java
- │    │        └── dto
- │    │            └── ViaCepResponse.java
- │    └── order
- │        ├── controller
- │        │    ├── doc
- │        │    │    └── OrderDoc.java
- │        │    └── OrderController.java
- │        ├── domain
- │        │    └── postgres
- │        │        └── Order.java
- │        ├── dto
- │        │    ├── CreateOrderRequest.java
- │        │    └── OrderResponse.java
- │        ├── repository
- │        │    └── postgres
- │        │        └── OrderRepository.java
- │        └── service
- │            └── OrderService.java
- └── shared
-      ├── config
-      │    ├── SwaggerConfig.java
-      │    └── WebClientConfig.java
-      ├── exception
-      │    ├── response
-      │    │    └── ErrorResponse.java
-      │    ├── types
-      │    │    ├── DeliveryAlreadyExistsException.java
-      │    │    ├── DeliveryNotFoundException.java
-      │    │    ├── InvalidDeliveryStatusTransitionException.java
-      │    │    └── OrderNotFoundException.java
-      │    └── GlobalExceptionHandler.java
-      ├── model
-      │    └── ModelBase.java
-      └── security
-           ├── JwtAuthConverter.java
-           └── SecurityConfig.java
-```
+
+### Setting up Google OAuth2
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google+ API
+4. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
+5. Configure:
+   - Application type: Web application
+   - Authorized redirect URIs: `http://localhost:8080/login/oauth2/code/google`
+   - Authorized JavaScript origins: `http://localhost:8080`
+6. Copy Client ID and Client Secret to `.env` file
+
+### Security Configuration
+
+Security can be enabled/disabled via environment variable:
+
+- `SECURITY_ENABLED=false` - All endpoints are public (development)
+- `SECURITY_ENABLED=true` - API endpoints require authentication (production)
 
 ---
 
-## ⚠️ Known Issues / Limitations
+## External API Integration
 
-- External API availability depends on third-party service uptime
-- Token generation is delegated to the OAuth provider and not handled internally
+### ViaCEP Integration
+
+The application integrates with [ViaCEP API](https://viacep.com.br/) to retrieve address information based on Brazilian ZIP codes.
+
+**Implementation:**
+- Uses Spring WebClient for HTTP requests
+- Caches address data in MongoDB to avoid redundant API calls
+- Handles errors gracefully (returns null if API is unavailable)
+
+**Business Logic:**
+- When `GET /api/deliveries/{id}?includeTracking=true` is called:
+  1. Retrieves delivery from PostgreSQL
+  2. Checks MongoDB for cached address info
+  3. If not cached, calls ViaCEP API
+  4. Stores address info in MongoDB
+  5. Combines PostgreSQL + MongoDB data in response
 
 ---
 
-## 🐳 Docker Support
+## Deployment
 
-The application can be containerized using the provided `Dockerfile`.
+### Docker Support
 
-### Build image
+The application includes a `Dockerfile` for containerization.
+
+#### Build Docker Image
+
 ```bash
 docker build -t delivery-api .
 ```
 
-### Run container
+#### Run Docker Container
+
 ```bash
-docker run -p 8080:8080 delivery-api
+docker run -p 8080:8080 \
+  -e POSTGRES_URL=jdbc:postgresql://host.docker.internal:5432/delivery \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e MONGO_URI=mongodb://host.docker.internal:27017/delivery \
+  delivery-api
 ```
 
-### Docker Compose
+#### Docker Compose
 
-The `docker-compose.yml` file includes:
-- PostgreSQL service
-- MongoDB service
-- Application service (with build configuration)
+The `docker-compose.yml` file includes all services:
+
+```bash
+# Start all services
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
+### Production Deployment
+
+For production deployment:
+
+1. Set `SECURITY_ENABLED=true`
+2. Configure production database URLs
+3. Update OAuth redirect URIs to production domain
+4. Configure CORS allowed origins
+5. Use environment variables for all sensitive data
+6. Enable HTTPS
 
 ---
 
-## 📝 Environment Variables
+## Known Issues
 
-See `.env.example` for all required environment variables:
+1. **External API Dependency**: The application depends on ViaCEP API availability. If the external service is down, address information will not be retrieved.
 
-```bash
-# PostgreSQL Configuration
-POSTGRES_URL=jdbc:postgresql://localhost:5432/delivery
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
+2. **OAuth Token Management**: Token generation is delegated to the OAuth provider (Google/Auth0). The backend acts as a resource server and does not handle token generation internally.
 
-# MongoDB Configuration
-MONGO_URI=mongodb://localhost:27017/delivery
+3. **Session Management**: OAuth2 login sessions are managed by Spring Security. For stateless API usage, consider implementing JWT token validation.
 
-# OAuth2 Configuration
-OAUTH_ISSUER_URI=https://your-tenant.us.auth0.com/
-
-# Security Configuration
-SECURITY_ENABLED=false
-```
+4. **MongoDB Connection**: If MongoDB is unavailable, the application will fail to start. Consider implementing connection retry logic or making MongoDB optional for basic CRUD operations.
 
 ---
 
-## 📄 License
+## Additional Resources
+
+- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- [Spring Security OAuth2](https://spring.io/projects/spring-security-oauth)
+- [MongoDB Documentation](https://docs.mongodb.com/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [Swagger/OpenAPI](https://swagger.io/)
+- [ViaCEP API](https://viacep.com.br/)
+
+---
+
+## License
 
 This project is licensed under the Apache 2.0 License.
 
 ---
 
-## 👥 Author
+## Author
 
-Developed as part of a technical assessment to demonstrate backend engineering skills.
+Developed as part of the ZCAM technical assessment for Java Backend Developer position.
